@@ -114,6 +114,11 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL hPen:DWORD
     LOCAL hOldPen:DWORD
 
+    ; double buffering locals
+    LOCAL memDC:DWORD
+    LOCAL hBmp:DWORD
+    LOCAL hOldBmp:DWORD
+
     .if uMsg == WM_ERASEBKGND
         mov eax, 1
         ret
@@ -269,55 +274,85 @@ timer_done:
         ret
 
     ; Rendering
-    .elseif uMsg == WM_PAINT
-        invoke BeginPaint, hWnd, ADDR ps
-        mov hdc, eax
+        .elseif uMsg == WM_PAINT
+            invoke BeginPaint, hWnd, ADDR ps
+            mov hdc, eax
 
-        invoke GetClientRect, hWnd, ADDR rc
-        invoke CreateSolidBrush, 0202020h
-        mov hBrush, eax
-        invoke FillRect, hdc, ADDR rc, hBrush
-        invoke DeleteObject, hBrush
+            ; Get client size
+            invoke GetClientRect, hWnd, ADDR rc
 
-        invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
-        mov hPen, eax
-        invoke SelectObject, hdc, hPen
-        mov hOldPen, eax
-        invoke Rectangle, hdc,
-            ARENA_LEFT, ARENA_TOP,
-            ARENA_RIGHT, ARENA_BOTTOM
-        invoke SelectObject, hdc, hOldPen
-        invoke DeleteObject, hPen
+            ; Create memory DC
+            invoke CreateCompatibleDC, hdc
+            mov memDC, eax
 
-        ; Player 1
-        invoke CreateSolidBrush, 0000FF00h
-        mov hBrush, eax
-        invoke SelectObject, hdc, hBrush
-        mov eax, playerX
-        mov ebx, eax
-        mov ecx, playerY
-        mov edx, ecx
-        add eax, PLAYER_SIZE
-        add ecx, PLAYER_SIZE
-        invoke Rectangle, hdc, ebx, edx, eax, ecx
-        invoke DeleteObject, hBrush
+            ; Create back buffer bitmap
+            invoke CreateCompatibleBitmap, hdc, rc.right, rc.bottom
+            mov hBmp, eax
 
-        ; Player 2
-        invoke CreateSolidBrush, 00FF0000h
-        mov hBrush, eax
-        invoke SelectObject, hdc, hBrush
-        mov eax, player2X
-        mov ebx, eax
-        mov ecx, player2Y
-        mov edx, ecx
-        add eax, PLAYER_SIZE
-        add ecx, PLAYER_SIZE
-        invoke Rectangle, hdc, ebx, edx, eax, ecx
-        invoke DeleteObject, hBrush
+            invoke SelectObject, memDC, hBmp
+            mov hOldBmp, eax
 
-        invoke EndPaint, hWnd, ADDR ps
-        xor eax, eax
-        ret
+            ; Draw everything to memDC
+
+            ; Background
+            invoke CreateSolidBrush, 0202020h
+            mov hBrush, eax
+            invoke FillRect, memDC, ADDR rc, hBrush
+            invoke DeleteObject, hBrush
+
+            ; Arena
+            invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
+            mov hPen, eax
+            invoke SelectObject, memDC, hPen
+            mov hOldPen, eax
+            invoke Rectangle, memDC,
+                ARENA_LEFT, ARENA_TOP,
+                ARENA_RIGHT, ARENA_BOTTOM
+            invoke SelectObject, memDC, hOldPen
+            invoke DeleteObject, hPen
+
+            ; Player 1
+            invoke CreateSolidBrush, 0000FF00h
+            mov hBrush, eax
+            invoke SelectObject, memDC, hBrush
+            mov eax, playerX
+            mov ebx, eax
+            mov ecx, playerY
+            mov edx, ecx
+            add eax, PLAYER_SIZE
+            add ecx, PLAYER_SIZE
+            invoke Rectangle, memDC, ebx, edx, eax, ecx
+            invoke DeleteObject, hBrush
+
+            ; Player 2
+            invoke CreateSolidBrush, 00FF0000h
+            mov hBrush, eax
+            invoke SelectObject, memDC, hBrush
+            mov eax, player2X
+            mov ebx, eax
+            mov ecx, player2Y
+            mov edx, ecx
+            add eax, PLAYER_SIZE
+            add ecx, PLAYER_SIZE
+            invoke Rectangle, memDC, ebx, edx, eax, ecx
+            invoke DeleteObject, hBrush
+
+            ; Blit Final Frame
+            invoke BitBlt, hdc,
+                0, 0,
+                rc.right, rc.bottom,
+                memDC,
+                0, 0,
+                SRCCOPY
+
+            ; Cleanup
+            invoke SelectObject, memDC, hOldBmp
+            invoke DeleteObject, hBmp
+            invoke DeleteDC, memDC
+
+            invoke EndPaint, hWnd, ADDR ps
+            xor eax, eax
+            ret
 
     .elseif uMsg == WM_DESTROY
         invoke KillTimer, hWnd, 1
