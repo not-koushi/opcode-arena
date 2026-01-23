@@ -236,6 +236,9 @@ clamp_bottom:
         jle done_input
         mov playerY, ARENA_BOTTOM - PLAYER_SIZE
 
+revert_move:
+    ; no-op for now
+
 ; collision check
 collision_check:
     mov eax, playerX
