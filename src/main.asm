@@ -24,7 +24,7 @@ ARENA_RIGHT  equ 750
 ARENA_BOTTOM equ 550
 
 PLAYER_SIZE  equ 20
-PLAYER_SPEED equ 10
+PLAYER_SPEED equ 6
 
 .data
 playerX  dd 100
