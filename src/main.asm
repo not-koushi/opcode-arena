@@ -29,6 +29,8 @@ PLAYER_SPEED equ 10
 .data
 playerX dd 100
 playerY dd 100
+player2X dd 600
+player2Y dd 400
 
 .code
 start:
