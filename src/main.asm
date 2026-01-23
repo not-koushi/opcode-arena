@@ -79,7 +79,29 @@ exit_loop:
 WinMain ENDP
 
 WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
-    .if uMsg == WM_DESTROY
+    LOCAL ps:PAINTSTRUCT
+    LOCAL hdc:DWORD
+    LOCAL hBrush:DWORD
+
+    .if uMsg == WM_PAINT
+        invoke BeginPaint, hWnd, ADDR ps
+        mov hdc, eax
+
+        ; Create solid background brush (dark gray)
+        invoke CreateSolidBrush, 0202020h
+        mov hBrush, eax
+
+        ; Fill entire client area
+        invoke FillRect, hdc, ADDR ps.rcPaint, hBrush
+
+        ; Clean up brush
+        invoke DeleteObject, hBrush
+
+        invoke EndPaint, hWnd, ADDR ps
+        xor eax, eax
+        ret
+
+    .elseif uMsg == WM_DESTROY
         invoke PostQuitMessage, 0
         xor eax, eax
         ret
@@ -88,5 +110,6 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     invoke DefWindowProc, hWnd, uMsg, wParam, lParam
     ret
 WndProc ENDP
+
 
 END start
