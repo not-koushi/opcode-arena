@@ -110,14 +110,15 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL hBrush:DWORD
     LOCAL hPen:DWORD
     LOCAL hOldPen:DWORD
-    LOCAL oldX:DWORD
-    LOCAL oldY:DWORD
-    LOCAL old2x:DWORD
-    LOCAL old2Y:DWORD
 
     .if uMsg == WM_ERASEBKGND
-        ; Prevent flickering by not erasing background
         mov eax, 1
+        ret
+
+    .elseif uMsg == WM_TIMER
+        ; Timer tick – for now, just trigger repaint
+        invoke InvalidateRect, hWnd, NULL, FALSE
+        xor eax, eax
         ret
 
     .elseif uMsg == WM_PAINT
@@ -126,209 +127,56 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
 
         ; Clear full client area
         invoke GetClientRect, hWnd, ADDR rc
-
         invoke CreateSolidBrush, 0202020h
         mov hBrush, eax
-
         invoke FillRect, hdc, ADDR rc, hBrush
         invoke DeleteObject, hBrush
 
         ; Draw arena
         invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
         mov hPen, eax
-
         invoke SelectObject, hdc, hPen
         mov hOldPen, eax
-
         invoke Rectangle, hdc,
             ARENA_LEFT,
             ARENA_TOP,
             ARENA_RIGHT,
             ARENA_BOTTOM
-
         invoke SelectObject, hdc, hOldPen
         invoke DeleteObject, hPen
 
-        ; Draw player
+        ; Draw player 1
         invoke CreateSolidBrush, 0000FF00h
         mov hBrush, eax
-
         invoke SelectObject, hdc, hBrush
-
         mov eax, playerX
         mov ebx, eax
         mov ecx, playerY
         mov edx, ecx
-
         add eax, PLAYER_SIZE
         add ecx, PLAYER_SIZE
-
-        invoke Rectangle, hdc,
-            ebx,
-            edx,
-            eax,
-            ecx
-
+        invoke Rectangle, hdc, ebx, edx, eax, ecx
         invoke DeleteObject, hBrush
 
-        ; Draw Player 2
+        ; Draw player 2
         invoke CreateSolidBrush, 00FF0000h
         mov hBrush, eax
-
         invoke SelectObject, hdc, hBrush
-
         mov eax, player2X
         mov ebx, eax
         mov ecx, player2Y
         mov edx, ecx
-
         add eax, PLAYER_SIZE
         add ecx, PLAYER_SIZE
-
-        invoke Rectangle, hdc,
-            ebx,
-            edx,
-            eax,
-            ecx
-        
+        invoke Rectangle, hdc, ebx, edx, eax, ecx
         invoke DeleteObject, hBrush
 
         invoke EndPaint, hWnd, ADDR ps
         xor eax, eax
         ret
 
-        .elseif uMsg == WM_KEYDOWN
-        
-        ; Save old positions
-        mov eax, playerX
-        mov oldX, eax
-        mov eax, playerY
-        mov oldY, eax
-
-        mov eax, player2X
-        mov old2x, eax
-        mov eax, player2Y
-        mov old2Y, eax
-
-        mov eax, wParam
-
-        ; Movement (single-step per press)
-        .if eax == 'W'
-            sub playerY, PLAYER_SPEED
-        .elseif eax == 'S'
-            add playerY, PLAYER_SPEED
-        .elseif eax == 'A'
-            sub playerX, PLAYER_SPEED
-        .elseif eax == 'D'
-            add playerX, PLAYER_SPEED
-        .elseif eax == VK_UP
-            sub player2Y, PLAYER_SPEED
-        .elseif eax == VK_DOWN
-            add player2Y, PLAYER_SPEED
-        .elseif eax == VK_LEFT
-            sub player2X, PLAYER_SPEED
-        .elseif eax == VK_RIGHT
-            add player2X, PLAYER_SPEED
-        .endif
-
-        ; Clamp X
-        mov eax, playerX
-        cmp eax, ARENA_LEFT
-        jge clamp_right
-        mov playerX, ARENA_LEFT
-
-clamp_right:
-        mov eax, playerX
-        cmp eax, ARENA_RIGHT - PLAYER_SIZE
-        jle clamp_top
-        mov playerX, ARENA_RIGHT - PLAYER_SIZE
-
-        ; Clamp Y
-clamp_top:
-        mov eax, playerY
-        cmp eax, ARENA_TOP
-        jge clamp_bottom
-        mov playerY, ARENA_TOP
-
-clamp_bottom:
-        mov eax, playerY
-        cmp eax, ARENA_BOTTOM - PLAYER_SIZE
-        jle done_input
-        mov playerY, ARENA_BOTTOM - PLAYER_SIZE
-
-        ; Clamp Player 2X
-        mov eax, player2X
-        cmp eax, ARENA_LEFT
-        mov player2X, ARENA_LEFT
-
-clamp2_right:
-        mov eax, player2X
-        cmp eax, ARENA_RIGHT - PLAYER_SIZE
-        jle clamp2_top
-        mov player2X, ARENA_RIGHT - PLAYER_SIZE
-
-        ; Clamp Player 2Y
-clamp2_top:
-    mov eax, player2Y
-    cmp eax, ARENA_TOP
-    jge clamp2_bottom
-    mov player2Y, ARENA_TOP
-
-clamp2_bottom:
-    mov eax, player2Y
-    cmp eax, ARENA_BOTTOM - PLAYER_SIZE
-    jle collision_check
-    mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
-
-; collision check
-collision_check:
-
-    ; X overlap    
-    mov eax, playerX
-    add eax, PLAYER_SIZE
-    cmp eax, player2X
-    jle no_collision
-
-    mov eax, player2X
-    add eax, PLAYER_SIZE
-    cmp eax, playerX
-    jle no_collision
-
-    ; Y overlap
-    mov eax, playerY
-    add eax, PLAYER_SIZE
-    cmp eax, player2Y
-    jle no_collision
-
-    mov eax, player2Y
-    add eax, PLAYER_SIZE
-    cmp eax, playerY
-    jle no_collision
-
-    ; Collision detected -> revert both players
-
-    mov eax, oldX
-    mov playerX, eax
-    mov eax, oldY
-    mov playerY, eax
-
-    mov eax, old2x
-    mov player2X, eax
-    mov eax, old2Y
-    mov player2Y, eax
-
-no_collision:
-done_input:
-        invoke InvalidateRect, hWnd, NULL, FALSE
-        xor eax, eax
-        ret
-
-ignore_key:
-        xor eax, eax
-        ret
-
-
     .elseif uMsg == WM_DESTROY
+        invoke KillTimer, hWnd, 1
         invoke PostQuitMessage, 0
         xor eax, eax
         ret
