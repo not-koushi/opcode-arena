@@ -24,6 +24,7 @@ ARENA_RIGHT  equ 750
 ARENA_BOTTOM equ 550
 
 PLAYER_SIZE  equ 20
+PLAYER_SPEED equ 10
 
 .data
 playerX dd 100
@@ -49,8 +50,8 @@ WinMain PROC hInst:DWORD, hPrev:DWORD, lpCmd:DWORD, nShow:DWORD
     mov eax, hInst
     mov wc.hInstance, eax
 
-    mov eax, COLOR_WINDOW + 1
-    mov wc.hbrBackground, eax
+    ; IMPORTANT: disable automatic background erase
+    mov wc.hbrBackground, NULL
 
     mov wc.lpszMenuName, NULL
     mov wc.lpszClassName, OFFSET WINDOW_CLASS
@@ -102,7 +103,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         invoke BeginPaint, hWnd, ADDR ps
         mov hdc, eax
 
-        ; Fill entire client area (dark gray)
+        ; Clear full client area
         invoke GetClientRect, hWnd, ADDR rc
 
         invoke CreateSolidBrush, 0202020h
@@ -111,7 +112,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         invoke FillRect, hdc, ADDR rc, hBrush
         invoke DeleteObject, hBrush
 
-        ; Draw arena boundary (white)
+        ; Draw arena
         invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
         mov hPen, eax
 
@@ -127,19 +128,17 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         invoke SelectObject, hdc, hOldPen
         invoke DeleteObject, hPen
 
-        ; Draw player (green square)
+        ; Draw player
         invoke CreateSolidBrush, 0000FF00h
         mov hBrush, eax
 
         invoke SelectObject, hdc, hBrush
 
-        ; left / top
         mov eax, playerX
         mov ebx, eax
         mov ecx, playerY
         mov edx, ecx
 
-        ; right / bottom
         add eax, PLAYER_SIZE
         add ecx, PLAYER_SIZE
 
@@ -152,6 +151,50 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         invoke DeleteObject, hBrush
 
         invoke EndPaint, hWnd, ADDR ps
+        xor eax, eax
+        ret
+
+    .elseif uMsg == WM_KEYDOWN
+        mov eax, wParam
+
+        ; Movement
+        .if eax == 'W'
+            sub playerY, PLAYER_SPEED
+        .elseif eax == 'S'
+            add playerY, PLAYER_SPEED
+        .elseif eax == 'A'
+            sub playerX, PLAYER_SPEED
+        .elseif eax == 'D'
+            add playerX, PLAYER_SPEED
+        .endif
+
+        ; Clamp X
+        mov eax, playerX
+        cmp eax, ARENA_LEFT
+        jge clamp_right
+        mov playerX, ARENA_LEFT
+
+clamp_right:
+        mov eax, playerX
+        cmp eax, ARENA_RIGHT - PLAYER_SIZE
+        jle clamp_top
+        mov playerX, ARENA_RIGHT - PLAYER_SIZE
+
+        ; Clamp Y
+clamp_top:
+        mov eax, playerY
+        cmp eax, ARENA_TOP
+        jge clamp_bottom
+        mov playerY, ARENA_TOP
+
+clamp_bottom:
+        mov eax, playerY
+        cmp eax, ARENA_BOTTOM - PLAYER_SIZE
+        jle done_input
+        mov playerY, ARENA_BOTTOM - PLAYER_SIZE
+
+done_input:
+        invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
 
