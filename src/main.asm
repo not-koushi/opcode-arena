@@ -201,6 +201,14 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             sub playerX, PLAYER_SPEED
         .elseif eax == 'D'
             add playerX, PLAYER_SPEED
+        .elseif eax == VK_UP
+            sub player2Y, PLAYER_SPEED
+        .elseif eax == VK_DOWN
+            add player2Y, PLAYER_SPEED
+        .elseif eax == VK_LEFT
+            sub player2X, PLAYER_SPEED
+        .elseif eax == VK_RIGHT
+            add player2X, PLAYER_SPEED
         .endif
 
         ; Clamp X
