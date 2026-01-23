@@ -185,11 +185,6 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
 
         .elseif uMsg == WM_KEYDOWN
 
-        ; Ignore auto-repeat keydown
-        mov eax, lParam
-        test eax, 40000000h
-        jnz ignore_key
-
         mov eax, wParam
 
         ; Movement (single-step per press)
