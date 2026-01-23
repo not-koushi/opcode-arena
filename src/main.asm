@@ -17,6 +17,10 @@ WndProc  PROTO :DWORD, :DWORD, :DWORD, :DWORD
 .const
 WINDOW_CLASS db "OpcodeArenaWnd", 0
 WINDOW_TITLE db "Opcode Arena", 0
+ARENA_LEFT equ 50
+ARENA_TOP equ 50
+ARENA_RIGHT equ 750
+ARENA_BOTTOM equ 550
 
 .code
 start:
