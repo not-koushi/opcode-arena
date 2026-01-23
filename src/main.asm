@@ -118,9 +118,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         mov eax, 1
         ret
 
-    ; =========================
-    ; INPUT STATE UPDATE
-    ; =========================
+    ; Input state update
     .elseif uMsg == WM_KEYDOWN
         mov eax, wParam
 
@@ -169,10 +167,8 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         xor eax, eax
         ret
 
-    ; =========================
-    ; GAME UPDATE LOOP
-    ; =========================
-    .elseif uMsg == WM_TIMER
+    ; Game update loop
+        .elseif uMsg == WM_TIMER
 
         ; Player 1 movement
         cmp keyW, 1
@@ -195,7 +191,7 @@ p1_no_a:
         add playerX, PLAYER_SPEED
 p1_no_d:
 
-        ; Player 2 movement
+        ; Player 1 movement
         cmp keyUp, 1
         jne p2_no_up
         sub player2Y, PLAYER_SPEED
@@ -216,13 +212,63 @@ p2_no_left:
         add player2X, PLAYER_SPEED
 p2_no_right:
 
+        ; Clamp Player 1X
+        mov eax, playerX
+        cmp eax, ARENA_LEFT
+        jge p1_x_right_ok
+        mov playerX, ARENA_LEFT
+
+p1_x_right_ok:
+        mov eax, playerX
+        cmp eax, ARENA_RIGHT - PLAYER_SIZE
+        jle p1_y_clamp
+        mov playerX, ARENA_RIGHT - PLAYER_SIZE
+
+        ; Clamp Player 1Y
+p1_y_clamp:
+        mov eax, playerY
+        cmp eax, ARENA_TOP
+        jge p1_y_bottom_ok
+        mov playerY, ARENA_TOP
+
+p1_y_bottom_ok:
+        mov eax, playerY
+        cmp eax, ARENA_BOTTOM - PLAYER_SIZE
+        jle p2_x_clamp
+        mov playerY, ARENA_BOTTOM - PLAYER_SIZE
+
+        ; Clamp Player 2X
+p2_x_clamp:
+        mov eax, player2X
+        cmp eax, ARENA_LEFT
+        jge p2_x_right_ok
+        mov player2X, ARENA_LEFT
+
+p2_x_right_ok:
+        mov eax, player2X
+        cmp eax, ARENA_RIGHT - PLAYER_SIZE
+        jle p2_y_clamp
+        mov player2X, ARENA_RIGHT - PLAYER_SIZE
+
+        ; Clamp Player 2Y
+p2_y_clamp:
+        mov eax, player2Y
+        cmp eax, ARENA_TOP
+        jge p2_y_bottom_ok
+        mov player2Y, ARENA_TOP
+
+p2_y_bottom_ok:
+        mov eax, player2Y
+        cmp eax, ARENA_BOTTOM - PLAYER_SIZE
+        jle timer_done
+        mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
+
+timer_done:
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
 
-    ; =========================
-    ; RENDERING
-    ; =========================
+    ; Rendering
     .elseif uMsg == WM_PAINT
         invoke BeginPaint, hWnd, ADDR ps
         mov hdc, eax
