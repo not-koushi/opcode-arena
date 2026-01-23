@@ -82,20 +82,36 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL ps:PAINTSTRUCT
     LOCAL hdc:DWORD
     LOCAL hBrush:DWORD
+    LOCAL hPen:DWORD
+    LOCAL hOldPen:DWORD
 
     .if uMsg == WM_PAINT
         invoke BeginPaint, hWnd, ADDR ps
         mov hdc, eax
 
-        ; Create solid background brush (dark gray)
+        ; Background fill (dark gray)
         invoke CreateSolidBrush, 0202020h
         mov hBrush, eax
 
-        ; Fill entire client area
         invoke FillRect, hdc, ADDR ps.rcPaint, hBrush
-
-        ; Clean up brush
         invoke DeleteObject, hBrush
+
+        ; Arena border (white rectangle)
+        invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
+        mov hPen, eax
+
+        invoke SelectObject, hdc, hPen
+        mov hOldPen, eax
+
+        invoke Rectangle, hdc,
+            ARENA_LEFT,
+            ARENA_TOP,
+            ARENA_RIGHT,
+            ARENA_BOTTOM
+
+        ; Restore previous pen and clean up
+        invoke SelectObject, hdc, hOldPen
+        invoke DeleteObject, hPen
 
         invoke EndPaint, hWnd, ADDR ps
         xor eax, eax
@@ -110,6 +126,5 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     invoke DefWindowProc, hWnd, uMsg, wParam, lParam
     ret
 WndProc ENDP
-
 
 END start
