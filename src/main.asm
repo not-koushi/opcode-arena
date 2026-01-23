@@ -31,6 +31,16 @@ playerX dd 100
 playerY dd 100
 player2X dd 600
 player2Y dd 400
+; Player 1 keys
+keyW db 0
+keyA db 0
+keyS db 0
+keyD db 0
+; Player 2 keys
+keyUp db 0
+keyDown db 0
+keyLeft db 0
+keyRight db 0
 
 .code
 start:
