@@ -99,7 +99,12 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL hPen:DWORD
     LOCAL hOldPen:DWORD
 
-    .if uMsg == WM_PAINT
+    .if uMsg == WM_ERASEBKGND
+        ; Prevent flickering by not erasing background
+        mov eax, 1
+        ret
+
+    .elseif uMsg == WM_PAINT
         invoke BeginPaint, hWnd, ADDR ps
         mov hdc, eax
 
@@ -154,10 +159,16 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         xor eax, eax
         ret
 
-    .elseif uMsg == WM_KEYDOWN
+        .elseif uMsg == WM_KEYDOWN
+
+        ; Ignore auto-repeat keydown
+        mov eax, lParam
+        test eax, 40000000h
+        jnz ignore_key
+
         mov eax, wParam
 
-        ; Movement
+        ; Movement (single-step per press)
         .if eax == 'W'
             sub playerY, PLAYER_SPEED
         .elseif eax == 'S'
@@ -197,6 +208,11 @@ done_input:
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
+
+ignore_key:
+        xor eax, eax
+        ret
+
 
     .elseif uMsg == WM_DESTROY
         invoke PostQuitMessage, 0
