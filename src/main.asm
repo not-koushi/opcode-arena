@@ -236,6 +236,30 @@ clamp_bottom:
         jle done_input
         mov playerY, ARENA_BOTTOM - PLAYER_SIZE
 
+        ; Clamp Player 2X
+        mov eax, player2X
+        cmp eax, ARENA_LEFT
+        mov player2X, ARENA_LEFT
+
+clamp2_right:
+        mov eax, player2X
+        cmp eax, ARENA_RIGHT - PLAYER_SIZE
+        jle clamp2_top
+        mov player2X, ARENA_RIGHT - PLAYER_SIZE
+
+        ; Clamp Player 2Y
+clamp2_top:
+    mov eax, player2Y
+    cmp eax, ARENA_TOP
+    jge clamp2_bottom
+    mov player2Y, ARENA_TOP
+
+clamp2_bottom:
+    mov eax, player2Y
+    cmp eax, ARENA_BOTTOM - PLAYER_SIZE
+    jle collision_check
+    mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
+
 revert_move:
     ; no-op for now
 
