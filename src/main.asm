@@ -17,14 +17,15 @@ WndProc  PROTO :DWORD, :DWORD, :DWORD, :DWORD
 .const
 WINDOW_CLASS db "OpcodeArenaWnd", 0
 WINDOW_TITLE db "Opcode Arena", 0
-ARENA_LEFT equ 50
-ARENA_TOP equ 50
-ARENA_RIGHT equ 750
-ARENA_BOTTOM equ 550
-PLAYER_SIZE equ 20
-PLAYER_SPEED equ 10
 
-.data 
+ARENA_LEFT   equ 50
+ARENA_TOP    equ 50
+ARENA_RIGHT  equ 750
+ARENA_BOTTOM equ 550
+
+PLAYER_SIZE  equ 20
+
+.data
 playerX dd 100
 playerY dd 100
 
@@ -44,15 +45,20 @@ WinMain PROC hInst:DWORD, hPrev:DWORD, lpCmd:DWORD, nShow:DWORD
     mov wc.lpfnWndProc, OFFSET WndProc
     mov wc.cbClsExtra, 0
     mov wc.cbWndExtra, 0
+
     mov eax, hInst
     mov wc.hInstance, eax
-    mov wc.hbrBackground, COLOR_WINDOW+1
+
+    mov eax, COLOR_WINDOW + 1
+    mov wc.hbrBackground, eax
+
     mov wc.lpszMenuName, NULL
     mov wc.lpszClassName, OFFSET WINDOW_CLASS
 
     invoke LoadIcon, NULL, IDI_APPLICATION
     mov wc.hIcon, eax
     mov wc.hIconSm, eax
+
     invoke LoadCursor, NULL, IDC_ARROW
     mov wc.hCursor, eax
 
@@ -86,6 +92,7 @@ WinMain ENDP
 
 WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL ps:PAINTSTRUCT
+    LOCAL rc:RECT
     LOCAL hdc:DWORD
     LOCAL hBrush:DWORD
     LOCAL hPen:DWORD
@@ -95,14 +102,16 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         invoke BeginPaint, hWnd, ADDR ps
         mov hdc, eax
 
-        ; Background fill (dark gray)
+        ; Fill entire client area (dark gray)
+        invoke GetClientRect, hWnd, ADDR rc
+
         invoke CreateSolidBrush, 0202020h
         mov hBrush, eax
 
-        invoke FillRect, hdc, ADDR ps.rcPaint, hBrush
+        invoke FillRect, hdc, ADDR rc, hBrush
         invoke DeleteObject, hBrush
 
-        ; Arena border (white rectangle)
+        ; Draw arena boundary (white)
         invoke CreatePen, PS_SOLID, 3, 00FFFFFFh
         mov hPen, eax
 
@@ -115,9 +124,32 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             ARENA_RIGHT,
             ARENA_BOTTOM
 
-        ; Restore previous pen and clean up
         invoke SelectObject, hdc, hOldPen
         invoke DeleteObject, hPen
+
+        ; Draw player (green square)
+        invoke CreateSolidBrush, 0000FF00h
+        mov hBrush, eax
+
+        invoke SelectObject, hdc, hBrush
+
+        ; left / top
+        mov eax, playerX
+        mov ebx, eax
+        mov ecx, playerY
+        mov edx, ecx
+
+        ; right / bottom
+        add eax, PLAYER_SIZE
+        add ecx, PLAYER_SIZE
+
+        invoke Rectangle, hdc,
+            ebx,
+            edx,
+            eax,
+            ecx
+
+        invoke DeleteObject, hBrush
 
         invoke EndPaint, hWnd, ADDR ps
         xor eax, eax
