@@ -100,6 +100,10 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     LOCAL hBrush:DWORD
     LOCAL hPen:DWORD
     LOCAL hOldPen:DWORD
+    LOCAL oldX:DWORD
+    LOCAL oldY:DWORD
+    LOCAL old2x:DWORD
+    LOCAL old2Y:DWORD
 
     .if uMsg == WM_ERASEBKGND
         ; Prevent flickering by not erasing background
@@ -184,6 +188,17 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         ret
 
         .elseif uMsg == WM_KEYDOWN
+        
+        ; Save old positions
+        mov eax, playerX
+        mov oldX, eax
+        mov eax, playerY
+        mov oldY, eax
+
+        mov eax, player2X
+        mov old2x, eax
+        mov eax, player2Y
+        mov old2Y, eax
 
         mov eax, wParam
 
@@ -255,16 +270,44 @@ clamp2_bottom:
     jle collision_check
     mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
 
-revert_move:
-    ; no-op for now
-
 ; collision check
 collision_check:
-    mov eax, playerX
-    sub eax, player2X
-    cmp eax, PLAYER_SIZE
-    jl revert_move
 
+    ; X overlap    
+    mov eax, playerX
+    add eax, PLAYER_SIZE
+    cmp eax, player2X
+    jle no_collision
+
+    mov eax, player2X
+    add eax, PLAYER_SIZE
+    cmp eax, playerX
+    jle no_collision
+
+    ; Y overlap
+    mov eax, playerY
+    add eax, PLAYER_SIZE
+    cmp eax, player2Y
+    jle no_collision
+
+    mov eax, player2Y
+    add eax, PLAYER_SIZE
+    cmp eax, playerY
+    jle no_collision
+
+    ; Collision detected -> revert both players
+
+    mov eax, oldX
+    mov playerX, eax
+    mov eax, oldY
+    mov playerY, eax
+
+    mov eax, old2x
+    mov player2X, eax
+    mov eax, old2Y
+    mov player2Y, eax
+
+no_collision:
 done_input:
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
