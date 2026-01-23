@@ -90,6 +90,9 @@ WinMain PROC hInst:DWORD, hPrev:DWORD, lpCmd:DWORD, nShow:DWORD
     invoke ShowWindow, hwnd, SW_SHOWNORMAL
     invoke UpdateWindow, hwnd
 
+    ; start game timer
+    invoke SetTimer, hwnd, 1, 16, NULL
+
 msg_loop:
     invoke GetMessage, ADDR msg, NULL, 0, 0
     cmp eax, 0
@@ -116,7 +119,48 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         ret
 
     .elseif uMsg == WM_TIMER
-        ; Timer tick – for now, just trigger repaint
+        ; Player 1 movement
+        cmp keyW, 1
+        jne t_p1_no_w
+        sub playerY, PLAYER_SPEED
+t_p1_no_w:
+
+        cmp keyS, 1
+        jne t_p1_no_s
+        add playerY, PLAYER_SPEED
+t_p1_no_s:
+
+        cmp keyA, 1
+        jne t_p1_no_a
+        sub playerX, PLAYER_SPEED
+t_p1_no_a:
+
+        cmp keyD, 1
+        jne t_p1_no_d
+        add playerX, PLAYER_SPEED
+t_p1_no_d:
+
+        ; Player 2 movement
+        cmp keyUp, 1
+        jne t_p2_no_up
+        sub player2Y, PLAYER_SPEED
+t_p2_no_up:
+
+        cmp keyDown, 1
+        jne t_p2_no_down
+        add player2Y, PLAYER_SPEED
+t_p2_no_down:
+
+        cmp keyLeft, 1
+        jne t_p2_no_left
+        sub player2X, PLAYER_SPEED
+t_p2_no_left:
+
+        cmp keyRight, 1
+        jne t_p2_no_right
+        add player2X, PLAYER_SPEED
+t_p2_no_right:
+
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
