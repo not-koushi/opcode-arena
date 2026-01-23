@@ -157,6 +157,28 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
 
         invoke DeleteObject, hBrush
 
+        ; Draw Player 2
+        invoke CreateSolidBrush, 00FF0000h
+        mov hBrush, eax
+
+        invoke SelectObject, hdc, hBrush
+
+        mov eax, player2X
+        mov ebx, eax
+        mov ecx, player2Y
+        mov edx, ecx
+
+        add eax, PLAYER_SIZE
+        add ecx, PLAYER_SIZE
+
+        invoke Rectangle, hdc,
+            ebx,
+            edx,
+            eax,
+            ecx
+        
+        invoke DeleteObject, hBrush
+
         invoke EndPaint, hWnd, ADDR ps
         xor eax, eax
         ret
