@@ -21,6 +21,12 @@ ARENA_LEFT equ 50
 ARENA_TOP equ 50
 ARENA_RIGHT equ 750
 ARENA_BOTTOM equ 550
+PLAYER_SIZE equ 20
+PLAYER_SPEED equ 10
+
+.data 
+playerX dd 100
+playerY dd 100
 
 .code
 start:
