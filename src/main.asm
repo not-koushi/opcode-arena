@@ -44,6 +44,14 @@ keyDown  db 0
 keyLeft  db 0
 keyRight db 0
 
+; Health
+playerHP dd 100
+player2HP dd 100
+
+; Attack flags
+p1Attack db 0
+p2Attack db 0
+
 .code
 start:
     invoke GetModuleHandle, NULL
