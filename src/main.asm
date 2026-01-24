@@ -371,6 +371,28 @@ p2_no_attack:
     mov p1Attack, 0
     mov p2Attack, 0
 
+        ; Clamp health
+        cmp playerHP, 0
+        jge hp1_ok
+        mov playerHP, 0
+hp1_ok:
+        
+        cmp playerHP, MAX_HP
+        jle hp1_max_ok
+        mov playerHP, MAX_HP
+hp1_max_ok:
+
+        cmp player2HP, 0
+        jge hp2_ok
+        mov player2HP, 0
+hp2_ok:
+
+        cmp player2HP, MAX_HP
+        jle hp2_max_ok
+        mov player2HP, MAX_HP
+hp2_max_ok:
+
+
 timer_done:
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
