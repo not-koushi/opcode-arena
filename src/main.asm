@@ -320,6 +320,10 @@ p2_y_bottom_ok:
 
         ; Apply damage
         sub player2HP, 10
+        cmp player2HP, 0
+        jge p1_attack_done
+        mov player2HP, 0
+        p1_attack_done:
         mov p1Attack, 0
 
 p1_no_attack:
@@ -351,6 +355,10 @@ p1_no_attack:
         jge p2_no_attack
 
         sub playerHP, 10
+        cmp playerHP, 0
+        jge p2_attack_done
+        mov playerHP, 0
+        p2_attack_done:
         mov p2Attack, 0
 
 p2_no_attack:
