@@ -400,6 +400,40 @@ timer_done:
             invoke Rectangle, memDC, ebx, edx, eax, ecx
             invoke DeleteObject, hBrush
 
+            ; Player 1 Health Bar
+            invoke CreateSolidBrush, 0000FF00h
+            mov hBrush, eax
+            invoke SelectObject, memDC, hBrush
+
+            mov eax, playerHP
+            imul eax, PLAYER_SIZE
+            mov ecx, 100
+            cdq
+            idiv ecx ; eax = scaled bar width
+
+            ; left
+            mov ebx, playerX
+
+            ; top
+            mov ecx, playerY
+            sub ecx, 8
+
+            ; right
+            mov edx, ebx
+            add edx, eax
+
+            ; bottom
+            mov esi, ecx
+            add esi, 5
+
+            invoke Rectangle, memDC,
+                ebx,
+                ecx,
+                edx,
+                esi
+
+            invoke DeleteObject, hBrush
+
             ; Player 2
             invoke CreateSolidBrush, 00FF0000h
             mov hBrush, eax
@@ -411,6 +445,40 @@ timer_done:
             add eax, PLAYER_SIZE
             add ecx, PLAYER_SIZE
             invoke Rectangle, memDC, ebx, edx, eax, ecx
+            invoke DeleteObject, hBrush
+
+            ; Player 2 Health Bar
+            invoke CreateSolidBrush, 000000FFh
+            mov hBrush, eax
+            invoke SelectObject, memDC, hBrush
+
+            mov eax, player2HP
+            imul eax, PLAYER_SIZE
+            mov ecx, 100
+            cdq
+            idiv ecx 
+
+            ; left
+            mov ebx, player2X
+
+            ; top
+            mov ecx, player2Y
+            sub ecx, 8
+
+            ; right
+            mov edx, ebx
+            add edx, eax
+
+            ; bottom
+            mov esi, ecx
+            add esi, 5
+
+            invoke Rectangle, memDC,
+                ebx,
+                ecx,
+                edx,
+                esi
+
             invoke DeleteObject, hBrush
 
             ; Blit Final Frame
