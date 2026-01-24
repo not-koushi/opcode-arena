@@ -151,6 +151,10 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyLeft, 1
         .elseif eax == VK_RIGHT
             mov keyRight, 1
+        .elseif eax == VK_SPACE
+            mov p1Attack, 1
+        .else if eax == VK_RETURN
+            mov p2Attack, 1
         .endif
 
         xor eax, eax
@@ -175,6 +179,10 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyLeft, 0
         .elseif eax == VK_RIGHT
             mov keyRight, 0
+        .elseif eax == VK_SPACE
+            mov p1Attack, 0
+        .else if eax == VK_RETURN
+            mov p2Attack, 0
         .endif
 
         xor eax, eax
