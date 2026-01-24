@@ -331,6 +331,19 @@ p2_attack_y:
 
 p2_no_attack:    
 
+    cmp playerHP, 0
+    jg p2_alive
+    invoke MessageBox, hWnd, ADDR WINDOW_TITLE, ADDR WINDOW_TITLE, MB_OK
+    invoke PostQuitMessage, 0
+
+p2_alive:
+    cmp player2HP, 0
+    jg combat_done
+    invoke MessageBox, hWnd, ADDR WINDOW_TITLE, ADDR WINDOW_TITLE, MB_OK
+    invoke PostQuitMessage, 0
+
+combat_done:
+
 timer_done:
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
