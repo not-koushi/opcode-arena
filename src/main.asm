@@ -23,6 +23,10 @@ ARENA_TOP    equ 50
 ARENA_RIGHT  equ 750
 ARENA_BOTTOM equ 550
 
+MAX_HP equ 100
+ATTACK_DAMAGE equ 10
+HITBOX_SIZE equ PLAYER_SIZE
+
 PLAYER_SIZE  equ 20
 PLAYER_SPEED equ 6
 
@@ -45,8 +49,8 @@ keyLeft  db 0
 keyRight db 0
 
 ; Health
-playerHP dd 100
-player2HP dd 100
+playerHP dd MAX_HP
+player2HP dd MAX_HP
 
 ; Attack flags
 p1Attack db 0
@@ -294,32 +298,32 @@ p2_y_bottom_ok:
 
         ; A.right > B.left
         mov eax, playerX
-        add eax, PLAYER_SIZE
+        add eax, HITBOX_SIZE
         cmp eax, player2X
         jle p1_no_attack
 
         ; A.left < B.right
         mov eax, playerX
         mov ebx, player2X
-        add ebx, PLAYER_SIZE
+        add ebx, HITBOX_SIZE
         cmp eax, ebx
         jge p1_no_attack
 
         ; A.bottom > B.top
         mov eax, playerY
-        add eax, PLAYER_SIZE
+        add eax, HITBOX_SIZE
         cmp eax, player2Y
         jle p1_no_attack
 
         ; A.top < B.bottom
         mov eax, playerY
         mov ebx, player2Y
-        add ebx, PLAYER_SIZE
+        add ebx, HITBOX_SIZE
         cmp eax, ebx
         jge p1_no_attack
 
         ; Apply damage
-        sub player2HP, 10
+        sub player2HP, ATTACK_DAMAGE
         cmp player2HP, 0
         jge p1_attack_done
         mov player2HP, 0
@@ -354,7 +358,7 @@ p1_no_attack:
         cmp eax, ebx
         jge p2_no_attack
 
-        sub playerHP, 10
+        sub playerHP, ATTACK_DAMAGE
         cmp playerHP, 0
         jge p2_attack_done
         mov playerHP, 0
@@ -430,7 +434,7 @@ timer_done:
 
             mov eax, playerHP
             imul eax, PLAYER_SIZE
-            mov ecx, 100
+            mov ecx, MAX_HP
             cdq
             idiv ecx ; eax = scaled bar width
 
@@ -477,7 +481,7 @@ timer_done:
 
             mov eax, player2HP
             imul eax, PLAYER_SIZE
-            mov ecx, 100
+            mov ecx, MAX_HP
             cdq
             idiv ecx 
 
