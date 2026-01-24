@@ -153,7 +153,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyRight, 1
         .elseif eax == VK_SPACE
             mov p1Attack, 1
-        .else if eax == VK_RETURN
+        .elseif eax == VK_RETURN
             mov p2Attack, 1
         .endif
 
@@ -181,7 +181,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyRight, 0
         .elseif eax == VK_SPACE
             mov p1Attack, 0
-        .else if eax == VK_RETURN
+        .elseif eax == VK_RETURN
             mov p2Attack, 0
         .endif
 
@@ -212,7 +212,7 @@ p1_no_a:
         add playerX, PLAYER_SPEED
 p1_no_d:
 
-        ; Player 1 movement
+        ; Player 2 movement
         cmp keyUp, 1
         jne p2_no_up
         sub player2Y, PLAYER_SPEED
@@ -283,6 +283,53 @@ p2_y_bottom_ok:
         cmp eax, ARENA_BOTTOM - PLAYER_SIZE
         jle timer_done
         mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
+
+combat_start:
+
+    ; Player 1 attack
+    cmp p1Attack, 1
+    jne p1_no_attack
+
+    ; X overlap (attack to the right)
+    mov eax, playerX
+    add eax, PLAYER_SIZE
+    cmp eax, player2X
+    jg p1_attack_y 
+    jmp p1_no_attack 
+
+p1_attack_y:
+    ; Y overlap
+    mov eax, playerY
+    add eax, PLAYER_SIZE
+    cmp eax, player2Y
+    jl p1_no_attack
+
+    ; Apply damage
+    sub player2HP, 10
+
+p1_no_attack:
+    ; Player 2 attack
+    cmp p2Attack, 1
+    jne p2_no_attack
+
+    ; X overlap (attack to the right)
+    mov eax, player2X
+    sub eax, 30
+    cmp eax, playerX
+    jl p2_attack_y 
+    jmp p2_no_attack
+
+p2_attack_y:
+    ; Y overlap
+    mov eax, player2Y
+    add eax, PLAYER_SIZE
+    cmp eax, playerY
+    jl p2_no_attack
+
+    ;  Apply damage
+    sub playerHP, 10
+
+p2_no_attack:    
 
 timer_done:
         invoke InvalidateRect, hWnd, NULL, FALSE
