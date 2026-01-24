@@ -152,9 +152,16 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         .elseif eax == VK_RIGHT
             mov keyRight, 1
         .elseif eax == VK_SPACE
+            cmp p1Attack, 0
+            jne skip_p1_attack
             mov p1Attack, 1
+    skip_p1_attack:
+
         .elseif eax == VK_RETURN
+            cmp p2Attack, 0
+            jne skip_p2_attack
             mov p2Attack, 1
+    skip_p2_attack:
         .endif
 
         xor eax, eax
@@ -179,10 +186,6 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyLeft, 0
         .elseif eax == VK_RIGHT
             mov keyRight, 0
-        .elseif eax == VK_SPACE
-            mov p1Attack, 0
-        .elseif eax == VK_RETURN
-            mov p2Attack, 0
         .endif
 
         xor eax, eax
@@ -281,68 +284,80 @@ p2_y_clamp:
 p2_y_bottom_ok:
         mov eax, player2Y
         cmp eax, ARENA_BOTTOM - PLAYER_SIZE
-        jle timer_done
         mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
 
-combat_start:
+        ; Combat mechanics
 
-    ; Player 1 attack
-    cmp p1Attack, 1
-    jne p1_no_attack
+        ; Player 1 attack
+        cmp p1Attack, 1
+        jne p1_no_attack
 
-    ; X overlap (attack to the right)
-    mov eax, playerX
-    add eax, PLAYER_SIZE
-    cmp eax, player2X
-    jg p1_attack_y 
-    jmp p1_no_attack 
+        ; A.right > B.left
+        mov eax, playerX
+        add eax, PLAYER_SIZE
+        cmp eax, player2X
+        jle p1_no_attack
 
-p1_attack_y:
-    ; Y overlap
-    mov eax, playerY
-    add eax, PLAYER_SIZE
-    cmp eax, player2Y
-    jl p1_no_attack
+        ; A.left < B.right
+        mov eax, playerX
+        mov ebx, player2X
+        add ebx, PLAYER_SIZE
+        cmp eax, ebx
+        jge p1_no_attack
 
-    ; Apply damage
-    sub player2HP, 10
+        ; A.bottom > B.top
+        mov eax, playerY
+        add eax, PLAYER_SIZE
+        cmp eax, player2Y
+        jle p1_no_attack
+
+        ; A.top < B.bottom
+        mov eax, playerY
+        mov ebx, player2Y
+        add ebx, PLAYER_SIZE
+        cmp eax, ebx
+        jge p1_no_attack
+
+        ; Apply damage
+        sub player2HP, 10
+        mov p1Attack, 0
 
 p1_no_attack:
-    ; Player 2 attack
-    cmp p2Attack, 1
-    jne p2_no_attack
 
-    ; X overlap (attack to the right)
-    mov eax, player2X
-    sub eax, 30
-    cmp eax, playerX
-    jl p2_attack_y 
-    jmp p2_no_attack
+        ; Player 2 attack
+        cmp p2Attack, 1
+        jne p2_no_attack
 
-p2_attack_y:
-    ; Y overlap
-    mov eax, player2Y
-    add eax, PLAYER_SIZE
-    cmp eax, playerY
-    jl p2_no_attack
+        mov eax, player2X
+        add eax, PLAYER_SIZE
+        cmp eax, playerX
+        jle p2_no_attack
 
-    ;  Apply damage
-    sub playerHP, 10
+        mov eax, player2X
+        mov ebx, playerX
+        add ebx, PLAYER_SIZE
+        cmp eax, ebx
+        jge p2_no_attack
 
-p2_no_attack:    
+        mov eax, player2Y
+        add eax, PLAYER_SIZE
+        cmp eax, playerY
+        jle p2_no_attack
 
-    cmp playerHP, 0
-    jg p2_alive
-    invoke MessageBox, hWnd, ADDR WINDOW_TITLE, ADDR WINDOW_TITLE, MB_OK
-    invoke PostQuitMessage, 0
+        mov eax, player2Y
+        mov ebx, playerY
+        add ebx, PLAYER_SIZE
+        cmp eax, ebx
+        jge p2_no_attack
 
-p2_alive:
-    cmp player2HP, 0
-    jg combat_done
-    invoke MessageBox, hWnd, ADDR WINDOW_TITLE, ADDR WINDOW_TITLE, MB_OK
-    invoke PostQuitMessage, 0
+        sub playerHP, 10
+        mov p2Attack, 0
 
-combat_done:
+p2_no_attack:
+
+
+    mov p1Attack, 0
+    mov p2Attack, 0
 
 timer_done:
         invoke InvalidateRect, hWnd, NULL, FALSE
