@@ -28,7 +28,7 @@ PLAYER_SPEED equ 6
 
 MAX_HP equ 100
 ATTACK_DAMAGE equ 10
-HITBOX_SIZE equ PLAYER_SIZE
+HITBOX_SIZE equ PLAYER_SIZE + 3
 
 .data
 playerX  dd 100
@@ -144,7 +144,37 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     ; Input state update
     .elseif uMsg == WM_KEYDOWN
         mov eax, wParam
-
+        
+        cmp gameOver, 1
+        jne handle_keys
+        
+        cmp eax, 'R'
+        jne keydown_done
+        
+        ; Restart game
+        mov playerHP, MAX_HP
+        mov player2HP, MAX_HP
+        mov playerX, 100
+        mov playerY, 100
+        mov player2X, 600
+        mov player2Y, 400
+        mov gameOver, 0
+        mov winner, 0
+        jmp keydown_done
+        
+        mov keyW, 0
+        mov keyA, 0
+        mov keyS, 0
+        mov keyD, 0
+        mov keyUp, 0
+        mov keyDown, 0
+        mov keyLeft, 0
+        mov keyRight, 0
+        mov p1Attack, 0
+        mov p2Attack, 0
+        
+handle_keys:
+        
         .if eax == 'W'
             mov keyW, 1
         .elseif eax == 'A'
@@ -161,28 +191,19 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyLeft, 1
         .elseif eax == VK_RIGHT
             mov keyRight, 1
-        .elseif eax == 'R'
-            mov playerHP, MAX_HP
-            mov player2HP, MAX_HP
-            mov playerX, 100
-            mov playerY, 100
-            mov player2X, 600
-            mov player2Y, 400
-            mov gameOver, 0
-            mov winner, 0
         .elseif eax == VK_SPACE
             cmp p1Attack, 0
             jne skip_p1_attack
             mov p1Attack, 1
     skip_p1_attack:
-
         .elseif eax == VK_RETURN
             cmp p2Attack, 0
             jne skip_p2_attack
             mov p2Attack, 1
     skip_p2_attack:
-        .endif
-
+            .endif
+        
+keydown_done:
         xor eax, eax
         ret
 
@@ -355,24 +376,24 @@ p1_no_attack:
         jne p2_no_attack
 
         mov eax, player2X
-        add eax, PLAYER_SIZE
+        add eax, HITBOX_SIZE
         cmp eax, playerX
         jle p2_no_attack
 
         mov eax, player2X
         mov ebx, playerX
-        add ebx, PLAYER_SIZE
+        add ebx, HITBOX_SIZE
         cmp eax, ebx
         jge p2_no_attack
 
         mov eax, player2Y
-        add eax, PLAYER_SIZE
+        add eax, HITBOX_SIZE
         cmp eax, playerY
         jle p2_no_attack
 
         mov eax, player2Y
         mov ebx, playerY
-        add ebx, PLAYER_SIZE
+        add ebx, HITBOX_SIZE
         cmp eax, ebx
         jge p2_no_attack
 
@@ -563,18 +584,13 @@ timer_render_only:
                 memDC,
                 0, 0,
                 SRCCOPY
-
-            ; Cleanup
-            invoke SelectObject, memDC, hOldBmp
-            invoke DeleteObject, hBmp
-            invoke DeleteDC, memDC
-
+                
             cmp gameOver, 1
             jne paint_done
             
             invoke SetBkMode, memDC, TRANSPARENT
             invoke SetTextColor, memDC, 00FFFFFFh
-            
+                
             cmp winner, 1
             jne p2_wins
             invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
@@ -585,22 +601,14 @@ timer_render_only:
             
     paint_done:
             
+            ; Cleanup
+            invoke SelectObject, memDC, hOldBmp
+            invoke DeleteObject, hBmp
+            invoke DeleteDC, memDC
+
             invoke EndPaint, hWnd, ADDR ps
             xor eax, eax
             ret
-            
-            invoke SetBkMode, memDC, TRANSPARENT
-            invoke SetTextColor, memDC, 00FFFFFFh
-            
-            cmp winner, 1
-            jne p2_wins
-            invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
-            jmp paint_done
-    
-    p2_wins:
-            invoke TextOut, memDC, 200, 20, ADDR p2WinText, 31
-        
-    paint_done:
 
     .elseif uMsg == WM_DESTROY
         invoke KillTimer, hWnd, 1
