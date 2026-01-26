@@ -23,12 +23,12 @@ ARENA_TOP    equ 50
 ARENA_RIGHT  equ 750
 ARENA_BOTTOM equ 550
 
+PLAYER_SIZE equ 20
+PLAYER_SPEED equ 6
+
 MAX_HP equ 100
 ATTACK_DAMAGE equ 10
 HITBOX_SIZE equ PLAYER_SIZE
-
-PLAYER_SIZE  equ 20
-PLAYER_SPEED equ 6
 
 .data
 playerX  dd 100
@@ -161,6 +161,15 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
             mov keyLeft, 1
         .elseif eax == VK_RIGHT
             mov keyRight, 1
+        .elseif eax == 'R'
+            mov playerHP, MAX_HP
+            mov player2HP, MAX_HP
+            mov playerX, 100
+            mov playerY, 100
+            mov player2X, 600
+            mov player2Y, 400
+            mov gameOver, 0
+            mov winner, 0
         .elseif eax == VK_SPACE
             cmp p1Attack, 0
             jne skip_p1_attack
@@ -205,7 +214,7 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         .elseif uMsg == WM_TIMER
 
         cmp gameOver, 1
-        jw time_render_only
+        je timer_render_only
         
         ; Player 1 movement
         cmp keyW, 1
@@ -397,27 +406,23 @@ hp2_ok:
         mov player2HP, MAX_HP
 hp2_max_ok:
 
+        cmp playerHP, 0
+        jg p1_alive
+        mov gameOver, 1
+        mov winner, 2
+        jmp timer_render_only
+p1_alive:
+
+        cmp player2HP, 0
+        jg timer_render_only
+        mov gameOver, 1
+        mov winner, 1
+
 timer_render_only:
 
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
-
-        cmp gameOver, 1
-        je after_gameover_check
-        
-        cmp playerHP, 0
-        jg p1_alive
-        mov gameOver, 1
-        mov winner, 2
-p1_alive:
-
-        cmp player2HP, 0
-        jg after_gameover_check
-        mov gameOver, 1
-        mov winner, 1
-        
-after_gameover_check:
         
     ; Rendering
         .elseif uMsg == WM_PAINT
@@ -564,14 +569,27 @@ after_gameover_check:
             invoke DeleteObject, hBmp
             invoke DeleteDC, memDC
 
+            cmp gameOver, 1
+            jne paint_done
+            
+            invoke SetBkMode, memDC, TRANSPARENT
+            invoke SetTextColor, memDC, 00FFFFFFh
+            
+            cmp winner, 1
+            jne p2_wins
+            invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
+            jmp paint_done
+            
+    p2_wins:
+            invoke TextOut, memDC, 200, 20, ADDR p2WinText, 31
+            
+    paint_done:
+            
             invoke EndPaint, hWnd, ADDR ps
             xor eax, eax
             ret
             
-            cmp gameOver, 1
-            jne paint_done
-            
-            invoke SetBkMode, memDc, TRANSPARENT
+            invoke SetBkMode, memDC, TRANSPARENT
             invoke SetTextColor, memDC, 00FFFFFFh
             
             cmp winner, 1
