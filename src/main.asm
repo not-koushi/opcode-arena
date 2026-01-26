@@ -56,6 +56,12 @@ player2HP dd MAX_HP
 p1Attack db 0
 p2Attack db 0
 
+gameOver db 0
+winner db 0 ; 1 = Player 1, 2 = Player 2
+
+p1WinText db "PLAYER 1 WINS - Press R to Restart", 0
+p2WinText db "PLAYER 2 WINS - Press R to Restart", 0
+
 .code
 start:
     invoke GetModuleHandle, NULL
@@ -198,6 +204,9 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
     ; Game update loop
         .elseif uMsg == WM_TIMER
 
+        cmp gameOver, 1
+        jw time_render_only
+        
         ; Player 1 movement
         cmp keyW, 1
         jne p1_no_w
@@ -388,10 +397,28 @@ hp2_ok:
         mov player2HP, MAX_HP
 hp2_max_ok:
 
+timer_render_only:
+
         invoke InvalidateRect, hWnd, NULL, FALSE
         xor eax, eax
         ret
 
+        cmp gameOver, 1
+        je after_gameover_check
+        
+        cmp playerHP, 0
+        jg p1_alive
+        mov gameOver, 1
+        mov winner, 2
+p1_alive:
+
+        cmp player2HP, 0
+        jg after_gameover_check
+        mov gameOver, 1
+        mov winner, 1
+        
+after_gameover_check:
+        
     ; Rendering
         .elseif uMsg == WM_PAINT
             invoke BeginPaint, hWnd, ADDR ps
@@ -540,6 +567,22 @@ hp2_max_ok:
             invoke EndPaint, hWnd, ADDR ps
             xor eax, eax
             ret
+            
+            cmp gameOver, 1
+            jne paint_done
+            
+            invoke SetBkMode, memDc, TRANSPARENT
+            invoke SetTextColor, memDC, 00FFFFFFh
+            
+            cmp winner, 1
+            jne p2_wins
+            invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
+            jmp paint_done
+    
+    p2_wins:
+            invoke TextOut, memDC, 200, 20, ADDR p2WinText, 31
+        
+    paint_done:
 
     .elseif uMsg == WM_DESTROY
         invoke KillTimer, hWnd, 1
