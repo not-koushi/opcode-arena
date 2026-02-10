@@ -107,6 +107,8 @@ WinMain PROC hInst:DWORD, hPrev:DWORD, lpCmd:DWORD, nShow:DWORD
     mov hwnd, eax
     invoke ShowWindow, hwnd, SW_SHOWNORMAL
     invoke UpdateWindow, hwnd
+    invoke SetForegroundWindow, hwnd
+    invoke SetFocus, hwnd
 
     ; Start game timer (~60 FPS)
     invoke SetTimer, hwnd, 1, 16, NULL
@@ -142,7 +144,8 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         ret
 
     .elseif uMsg == WM_GETDLGCODE
-        mov eax, DLGC_WANTARROWS or DLGC_WANTALLKEYS
+        invoke DefWindowProc, hWnd, uMsg, wParam, lParam
+        or eax, DLGC_WANTARROWS
         ret
 
     ; Input state update
@@ -150,10 +153,12 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         mov eax, wParam
         
         cmp gameOver, 1
-        jne handle_keys
-        
-        cmp eax, 'R'
-        jne keydown_done
+        je only_restart_allowed
+        jmp handle_keys
+
+        only_restart_allowed:
+            cmp eax, 'R'
+            jne keydown_done
         
         ; Restart game
         mov playerHP, MAX_HP
@@ -165,17 +170,6 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         mov gameOver, 0
         mov winner, 0
         jmp keydown_done
-        
-        mov keyW, 0
-        mov keyA, 0
-        mov keyS, 0
-        mov keyD, 0
-        mov keyUp, 0
-        mov keyDown, 0
-        mov keyLeft, 0
-        mov keyRight, 0
-        mov p1Attack, 0
-        mov p2Attack, 0
         
 handle_keys:
         
@@ -211,7 +205,17 @@ keydown_done:
         xor eax, eax
         ret
 
+    .elseif uMsg == WM_SYSKEYDOWN
+        mov eax, wParam
+        jmp handle_keys
+    
+    .elseif uMsg == WM_SYSKEYUP
+        mov eax, wParam
+        jmp keyup_handler
+
+
     .elseif uMsg == WM_KEYUP
+    keyup_handler:
         mov eax, wParam
 
         .if eax == 'W'
@@ -606,20 +610,6 @@ timer_render_only:
                 memDC,
                 0, 0,
                 SRCCOPY
-                
-            cmp gameOver, 1
-            jne paint_done
-            
-            invoke SetBkMode, memDC, TRANSPARENT
-            invoke SetTextColor, memDC, 00FFFFFFh
-                
-            cmp winner, 1
-            jne p2_wins
-            invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
-            jmp paint_done
-            
-    p2_wins:
-            invoke TextOut, memDC, 200, 20, ADDR p2WinText, 31
             
     paint_done:
             
