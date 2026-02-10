@@ -141,6 +141,10 @@ WndProc PROC hWnd:DWORD, uMsg:DWORD, wParam:DWORD, lParam:DWORD
         mov eax, 1
         ret
 
+    .elseif uMsg == WM_GETDLGCODE
+        mov eax, DLGC_WANTARROWS or DLGC_WANTALLKEYS
+        ret
+
     ; Input state update
     .elseif uMsg == WM_KEYDOWN
         mov eax, wParam
@@ -431,6 +435,7 @@ hp2_max_ok:
         jg p1_alive
         mov gameOver, 1
         mov winner, 2
+        invoke RedrawWindow, hWnd, NULL, NULL, RDW_INVALIDATE or RDW_UPDATENOW
         jmp timer_render_only
 p1_alive:
 
@@ -438,6 +443,7 @@ p1_alive:
         jg timer_render_only
         mov gameOver, 1
         mov winner, 1
+        invoke RedrawWindow, hWnd, NULL, NULL, RDW_INVALIDATE or RDW_UPDATENOW
 
 timer_render_only:
 
@@ -576,6 +582,22 @@ timer_render_only:
                 esi
 
             invoke DeleteObject, hBrush
+
+            cmp gameOver, 1
+            jne skip_win_text
+
+            invoke SetBkMode, memDC, TRANSPARENT
+            invoke SetTextColor, memDC, 00FFFFFFh
+
+            cmp winner, 1
+            jne p2wins_draw
+            invoke TextOut, memDC, 200, 20, ADDR p1WinText, 31
+            jmp skip_win_text
+
+            p2wins_draw:
+            invoke TextOut, memDC, 200, 20, ADDR p2WinText, 31
+
+            skip_win_text:
 
             ; Blit Final Frame
             invoke BitBlt, hdc,
