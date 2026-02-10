@@ -213,10 +213,10 @@ keydown_done:
         mov eax, wParam
         jmp keyup_handler
 
-
     .elseif uMsg == WM_KEYUP
-    keyup_handler:
         mov eax, wParam
+
+keyup_handler:
 
         .if eax == 'W'
             mov keyW, 0
@@ -267,22 +267,22 @@ p1_no_a:
 p1_no_d:
 
         ; Player 2 movement
-        cmp keyUp, 1
+        cmp byte ptr keyUp, 1
         jne p2_no_up
         sub player2Y, PLAYER_SPEED
 p2_no_up:
 
-        cmp keyDown, 1
+        cmp byte ptr keyDown, 1
         jne p2_no_down
         add player2Y, PLAYER_SPEED
 p2_no_down:
 
-        cmp keyLeft, 1
+        cmp byte ptr keyLeft, 1
         jne p2_no_left
         sub player2X, PLAYER_SPEED
 p2_no_left:
 
-        cmp keyRight, 1
+        cmp byte ptr keyRight, 1
         jne p2_no_right
         add player2X, PLAYER_SPEED
 p2_no_right:
@@ -329,13 +329,16 @@ p2_x_right_ok:
 p2_y_clamp:
         mov eax, player2Y
         cmp eax, ARENA_TOP
-        jge p2_y_bottom_ok
+        jge p2_y_bottom_check
         mov player2Y, ARENA_TOP
 
-p2_y_bottom_ok:
+p2_y_bottom_check:
         mov eax, player2Y
         cmp eax, ARENA_BOTTOM - PLAYER_SIZE
+        jle p2_y_done
         mov player2Y, ARENA_BOTTOM - PLAYER_SIZE
+
+p2_y_done:
 
         ; Combat mechanics
 
