@@ -12,8 +12,6 @@ Implemented:
 - Win detection and restart
 - Double-buffered rendering
 
----
-
 ## Planned Improvements
 
 ### 1. Arena Environment
@@ -43,8 +41,6 @@ Replace placeholder squares with characters.
 - Multiple selectable fighters
 - Unique player appearance
 - Pre-match selection screen
-
----
 
 ## Long Term Goal
 
