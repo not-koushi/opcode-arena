@@ -1,6 +1,6 @@
-## Opcode Arena - Roadmap
+# Opcode Arena - Roadmap
 
-#### Current State
+## Current State
 
 A functional local multiplayer 2D fighting prototype built using Win32 API and MASM.
 
@@ -14,9 +14,9 @@ Implemented:
 
 ---
 
-### Planned Improvements
+## Planned Improvements
 
-##### 1. Arena Environment
+### 1. Arena Environment
 
 Add a proper stage instead of an empty box.
 
@@ -26,7 +26,7 @@ Add a proper stage instead of an empty box.
 - Movement paths around terrain
 - Collision with arena objects
 
-##### 2. Match Tracking
+### 2. Match Tracking
 
 Track performance across rounds.
 
@@ -35,7 +35,7 @@ Track performance across rounds.
 - Player 2 win counter
 - Persistent score during session
 
-##### 3. Character Selection
+### 3. Character Selection
 
 Replace placeholder squares with characters.
 
@@ -46,6 +46,6 @@ Replace placeholder squares with characters.
 
 ---
 
-### Long Term Goal
+## Long Term Goal
 
 Polish the project into a small complete local multiplayer game written entirely in x86 assembly.
